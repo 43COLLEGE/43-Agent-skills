@@ -1,0 +1,11 @@
+{
+  "knowledge_base": "",
+  "index_file": "_INDEX.md",
+  "file_prefix": "chat-",
+  "categories": {
+    "技术知识": "knowledge/",
+    "项目相关": "projects/",
+    "个人洞察": "insights/"
+  },
+  "default_category": "insights/"
+}

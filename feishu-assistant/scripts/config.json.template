@@ -1,0 +1,9 @@
+{
+  "_说明": "飞书助手配置模板。复制此文件为 config.json 并填入实际值。config.json 和 config.json.bak 已在 .gitignore 中排除，不会提交到 git。",
+  "_获取凭证": "飞书开放平台 https://open.feishu.cn → 我的应用 → 选择应用 → 凭证与基础信息",
+  "app_id": "cli_xxxxxxxxxxxxxxxx",
+  "app_secret": "your_app_secret_here",
+  "default_chat_id": "",
+  "oauth_scopes": "docx:document docx:document:readonly wiki:wiki wiki:wiki:readonly",
+  "team_members": {}
+}

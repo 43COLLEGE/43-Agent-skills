@@ -1,0 +1,28 @@
+# 飞书助手配置和缓存文件
+scripts/config.json
+scripts/config.json.bak
+scripts/cache/
+
+# Claude Code 本地设置
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

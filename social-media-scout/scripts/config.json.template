@@ -1,0 +1,6 @@
+{
+  "api_key": "your_tikhub_api_key_here",
+  "base_url": "https://mcp.tikhub.io",
+  "mcp_proxy_exe": "",
+  "mcp_proxy_zip": ""
+}

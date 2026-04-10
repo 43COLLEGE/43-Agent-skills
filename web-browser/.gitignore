@@ -1,0 +1,5 @@
+.DS_Store
+*.log
+references/site-patterns/*.md
+.claude/
+__pycache__/

@@ -1,0 +1,23 @@
+# 配置和缓存（含 API Key）
+scripts/config.json
+scripts/wechat_mp_ghid_cache.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Claude Code 本地设置
+.claude/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
