@@ -10,7 +10,7 @@
 
 ```
 帮我安装 43-Agent-skills：
-git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
+git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
 ```
 
 只要某几个？把不需要的技能名从命令里删掉就行。AI 会自动执行安装，首次使用时还会引导你完成配置。
@@ -27,6 +27,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 | [media-transcriber](./media-transcriber/) | 丢个音视频文件进来，出带时间戳的逐字稿，能分清谁说了什么（说话人识别），还能自动加标点断句。开完会、听完播客不用手动整理 | 安装 ffmpeg 即可 |
 | [email-invoice-processor](./email-invoice-processor/) | 自动从 QQ/163/Gmail/Outlook 邮箱里按日期范围捞发票，识别金额、税号、开票日期等字段，按购买方分类生成 Excel 汇总表。报销季不用一封封翻邮件 | 开启邮箱 IMAP 即可 |
 | [chat-archiver](./chat-archiver/) | 和 AI 聊出了好东西？一句"入库"自动提炼精华、分类存进你的知识库。支持 Obsidian/Logseq 等主流工具，也支持自定义目录结构 | 零配置可用 |
+| [find-skills](./find-skills/) | 不知道有什么技能可以用？让 AI 从 skills.sh 生态里帮你搜，验证质量后一键安装，不用自己翻 GitHub | 需要 Node.js |
 
 ---
 
@@ -92,6 +93,16 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 > *「把今天讨论的架构决策存到知识库」*
 > *「归档这次对话，技术方案部分单独存一份」*
 
+### 🔎 [find-skills](./find-skills/) — 技能发现与安装
+
+不知道有什么技能可以用？让 AI 从 skills.sh 生态里帮你搜索，验证安装量和来源信誉后推荐，确认就一键安装。不用自己翻 GitHub。
+
+> **配置**：需要 Node.js
+>
+> *「有没有做 React 测试的技能？」*
+> *「找一个能帮我写 changelog 的技能」*
+> *「我想给 PR review 找个自动化工具」*
+
 ---
 
 ## 常见问题
@@ -107,7 +118,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 - **飞书助手**：需要飞书企业账号（飞书本身免费）
 - **Social Media Scout**：需要 TikHub API Key（注册有免费额度可测试）
 - **media-transcriber**：转录免费，说话人识别需注册 HuggingFace（免费）
-- **email-invoice-processor / chat-archiver**：完全免费
+- **email-invoice-processor / chat-archiver / find-skills**：完全免费
 
 ## 许可证
 
