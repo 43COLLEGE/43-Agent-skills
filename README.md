@@ -17,7 +17,20 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 
 ---
 
-## 技能一览
+## 速查表
+
+| 技能 | 一句话 | 配置门槛 |
+|------|-------|----------|
+| [feishu-assistant](./feishu-assistant/) | 自然语言操作飞书：消息、文档、日历、任务、知识库、多维表格、邮箱 | 飞书企业账号 |
+| [social-media-scout](./social-media-scout/) | 抖音/小红书/B站/TikTok/快手/微博/Ins/YouTube/Twitter/公众号数据查询 | 注册 API Key |
+| [web-browser](./web-browser/) | AI 操控真实 Chrome：登录抓数据、反爬平台、截图取证、填表提交 | Node.js + Chrome |
+| [media-transcriber](./media-transcriber/) | 音视频转逐字稿：时间戳 + 说话人识别 + 自动标点 | ffmpeg |
+| [email-invoice-processor](./email-invoice-processor/) | QQ/163/Gmail/Outlook 邮箱发票自动提取，生成 Excel 汇总 | 开启 IMAP |
+| [chat-archiver](./chat-archiver/) | 一句"入库"，AI 提炼对话精华存入知识库（Obsidian/Logseq/自定义） | 零配置 |
+
+---
+
+## 技能详情
 
 ### 🔗 [feishu-assistant](./feishu-assistant/) — 飞书全家桶
 
