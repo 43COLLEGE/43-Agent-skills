@@ -19,14 +19,14 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 
 ## 速查表
 
-| 技能 | 一句话 | 配置门槛 |
-|------|-------|----------|
-| [feishu-assistant](./feishu-assistant/) | 自然语言操作飞书：消息、文档、日历、任务、知识库、多维表格、邮箱 | 飞书企业账号 |
-| [social-media-scout](./social-media-scout/) | 抖音/小红书/B站/TikTok/快手/微博/Ins/YouTube/Twitter/公众号数据查询 | 注册 API Key |
-| [web-browser](./web-browser/) | AI 操控真实 Chrome：登录抓数据、反爬平台、截图取证、填表提交 | Node.js + Chrome |
-| [media-transcriber](./media-transcriber/) | 音视频转逐字稿：时间戳 + 说话人识别 + 自动标点 | ffmpeg |
-| [email-invoice-processor](./email-invoice-processor/) | QQ/163/Gmail/Outlook 邮箱发票自动提取，生成 Excel 汇总 | 开启 IMAP |
-| [chat-archiver](./chat-archiver/) | 一句"入库"，AI 提炼对话精华存入知识库（Obsidian/Logseq/自定义） | 零配置 |
+| 技能 | 能帮你干什么 | 配置门槛 |
+|------|------------|----------|
+| [feishu-assistant](./feishu-assistant/) | 用自然语言操作飞书——发消息、写文档、查日历、建任务、管知识库、操作多维表格、收发邮箱，不用再在飞书里切来切去 | 需要飞书企业账号 |
+| [social-media-scout](./social-media-scout/) | 抖音、小红书、B站、TikTok、快手、微博、Instagram、YouTube、Twitter、微信公众号的数据一句话查到——粉丝画像、视频数据、评论分析、趋势追踪，做竞品分析和选题研究不用手动翻 | 注册 API Key 即可 |
+| [web-browser](./web-browser/) | 让 AI 操控真实 Chrome 浏览器——登录需要账号密码的后台抓数据、搞定小红书/微信公众号等反爬平台、截图取证、填表提交 | 需要 Node.js + Chrome |
+| [media-transcriber](./media-transcriber/) | 丢个音视频文件进来，出带时间戳的逐字稿，能分清谁说了什么（说话人识别），还能自动加标点断句。开完会、听完播客不用手动整理 | 安装 ffmpeg 即可 |
+| [email-invoice-processor](./email-invoice-processor/) | 自动从 QQ/163/Gmail/Outlook 邮箱里按日期范围捞发票，识别金额、税号、开票日期等字段，按购买方分类生成 Excel 汇总表。报销季不用一封封翻邮件 | 开启邮箱 IMAP 即可 |
+| [chat-archiver](./chat-archiver/) | 和 AI 聊出了好东西？一句"入库"自动提炼精华、分类存进你的知识库。支持 Obsidian/Logseq 等主流工具，也支持自定义目录结构 | 零配置可用 |
 
 ---
 
