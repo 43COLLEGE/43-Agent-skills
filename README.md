@@ -122,7 +122,9 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 把安装那段话直接发给 Claude Code，AI 帮你执行。之后所有操作都是自然语言，不需要碰命令行。
 
 **Q：Windows 能用吗？**
-能。所有技能都做了跨平台兼容。Windows 用户的 skills 目录在 `C:\Users\你的用户名\.claude\skills\`。
+能。所有技能都做了跨平台兼容。skills 目录位置：
+- **macOS / Linux**：`~/.claude/skills/`
+- **Windows**：`C:\Users\你的用户名\.claude\skills\`
 
 **Q：这些技能免费吗？**
 技能本身免费开源。部分技能依赖第三方服务：
