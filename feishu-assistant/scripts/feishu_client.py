@@ -341,9 +341,12 @@ class FeishuClient:
 
     # ─── 日历 ──────────────────────────────────────────────
     def _parse_time(self, time_str: str) -> str:
-        """将 'YYYY-MM-DD HH:MM' 格式转为 Unix 时间戳字符串"""
+        """将 'YYYY-MM-DD HH:MM' 或 'YYYY-MM-DD' 格式转为 Unix 时间戳字符串"""
         from datetime import datetime
-        return str(int(datetime.strptime(time_str, "%Y-%m-%d %H:%M").timestamp()))
+        try:
+            return str(int(datetime.strptime(time_str, "%Y-%m-%d %H:%M").timestamp()))
+        except ValueError:
+            return str(int(datetime.strptime(time_str, "%Y-%m-%d").timestamp()))
 
     def list_calendars(self) -> Dict[str, Any]:
         """列出用户的日历列表"""

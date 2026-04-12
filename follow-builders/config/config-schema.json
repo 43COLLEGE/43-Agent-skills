@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "User configuration for Follow Builders skill. Stored at ~/.follow-builders/config.json",
+  "type": "object",
+  "required": ["language", "delivery"],
+  "properties": {
+    "platform": {
+      "type": "string",
+      "enum": ["openclaw", "other"],
+      "description": "Detected platform: openclaw or other (Claude Code, Cursor, etc.)"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "zh", "bilingual"],
+      "default": "zh",
+      "description": "Digest language: zh (Chinese, default), en (English), bilingual (both)"
+    },
+    "timezone": {
+      "type": "string",
+      "default": "Asia/Shanghai",
+      "description": "IANA timezone string for scheduling (e.g. America/New_York, Asia/Shanghai)"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": ["daily", "weekly"],
+      "default": "daily",
+      "description": "How often to deliver the digest"
+    },
+    "deliveryTime": {
+      "type": "string",
+      "default": "08:00",
+      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+      "description": "Time of day to deliver digest in HH:MM format (24-hour)"
+    },
+    "weeklyDay": {
+      "type": "string",
+      "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "default": "monday",
+      "description": "Day of week for weekly digests (only used when frequency is weekly)"
+    },
+    "delivery": {
+      "type": "object",
+      "required": ["method"],
+      "description": "How the digest is delivered to the user",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["stdout", "telegram", "email"],
+          "default": "stdout",
+          "description": "Delivery method: stdout (terminal/agent), telegram (bot message), email (via Resend)"
+        },
+        "chatId": {
+          "type": "string",
+          "description": "Telegram chat ID (required when method is telegram)"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address to send digest to (required when method is email)"
+        }
+      }
+    },
+    "onboardingComplete": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has completed initial setup"
+    }
+  }
+}

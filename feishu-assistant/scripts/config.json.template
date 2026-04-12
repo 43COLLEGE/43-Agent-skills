@@ -4,6 +4,6 @@
   "app_id": "cli_xxxxxxxxxxxxxxxx",
   "app_secret": "your_app_secret_here",
   "default_chat_id": "",
-  "oauth_scopes": "docx:document docx:document:readonly wiki:wiki wiki:wiki:readonly",
+  "oauth_scopes": "auto:从 scopes.json 自动加载，无需手动填写",
   "team_members": {}
 }

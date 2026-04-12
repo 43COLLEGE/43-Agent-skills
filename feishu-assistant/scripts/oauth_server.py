@@ -21,6 +21,17 @@ SCRIPTS_DIR = Path(__file__).parent
 CONFIG_PATH = SCRIPTS_DIR / "config.json"
 CACHE_DIR = SCRIPTS_DIR / "cache"
 USER_TOKEN_PATH = CACHE_DIR / "user_token.json"
+SCOPES_PATH = SCRIPTS_DIR / "scopes.json"
+
+
+def load_user_scopes() -> str:
+    """从 scopes.json 读取完整的 user scopes，返回空格分隔的字符串"""
+    if SCOPES_PATH.exists():
+        data = json.loads(SCOPES_PATH.read_text(encoding="utf-8"))
+        scopes = data.get("scopes", {}).get("user", [])
+        if scopes:
+            return " ".join(scopes)
+    return ""
 
 
 class OAuthCallbackHandler(BaseHTTPRequestHandler):
@@ -93,7 +104,8 @@ def main():
     app_id = config["app_id"]
     app_secret = config["app_secret"]
     redirect_uri = "http://127.0.0.1:8080/callback"
-    scopes = config.get("oauth_scopes", "docx:document docx:document:readonly wiki:wiki:readonly")
+    # 优先从 scopes.json 读取完整权限，fallback 到 config.json
+    scopes = load_user_scopes() or config.get("oauth_scopes", "")
 
     print()
     print("=" * 56)

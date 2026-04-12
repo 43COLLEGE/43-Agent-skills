@@ -29,6 +29,18 @@ USER_TOKEN_PATH = CACHE_DIR / "user_token.json"
 CONTACTS_CACHE_PATH = CACHE_DIR / "contacts.json"
 SPACES_CACHE_PATH = CACHE_DIR / "wiki_spaces.json"
 LARK_CLI_CONFIG = Path.home() / ".lark-cli" / "config.json"
+SCOPES_PATH = SCRIPTS_DIR / "scopes.json"
+
+
+def load_user_scopes() -> str:
+    """从 scopes.json 读取完整的 user scopes，返回空格分隔的字符串"""
+    if not SCOPES_PATH.exists():
+        raise FileNotFoundError(f"scopes.json 不存在: {SCOPES_PATH}")
+    data = json.loads(SCOPES_PATH.read_text(encoding="utf-8"))
+    scopes = data.get("scopes", {}).get("user", [])
+    if not scopes:
+        raise ValueError("scopes.json 中 user scopes 为空")
+    return " ".join(scopes)
 
 
 # ─── 工具函数 ────────────────────────────────────────────────
@@ -455,11 +467,16 @@ def smooth_setup():
     print()
     print("  正在保存配置...")
 
+    try:
+        oauth_scopes = load_user_scopes()
+    except Exception:
+        oauth_scopes = ""
+
     config = {
         "app_id": app_id,
         "app_secret": "",
         "default_chat_id": "",
-        "oauth_scopes": "",
+        "oauth_scopes": oauth_scopes,
         "team_members": {},
     }
 
@@ -560,29 +577,7 @@ def legacy_setup():
     # 第 3 步：OAuth 授权
     print_header("授权登录", 3, total_steps)
 
-    oauth_scopes = (
-        "offline_access auth:user.id:read "
-        "docx:document docx:document:readonly docx:document:create docx:document:write_only "
-        "wiki:wiki wiki:wiki:readonly wiki:node:read "
-        "bitable:app bitable:app:readonly "
-        "calendar:calendar calendar:calendar:readonly calendar:calendar:read "
-        "calendar:calendar:create calendar:calendar:delete calendar:calendar:update "
-        "calendar:calendar.event:create calendar:calendar.event:delete "
-        "calendar:calendar.event:read calendar:calendar.event:update "
-        "calendar:calendar.free_busy:read "
-        "im:message:readonly im:message.group_msg:get_as_user im:message.p2p_msg:get_as_user "
-        "im:message.pins:read im:message.pins:write_only "
-        "im:message.reactions:read im:message.reactions:write_only "
-        "contact:user.base:readonly contact:user.basic_profile:readonly contact:user:search "
-        "mail:user_mailbox:readonly mail:user_mailbox.message:readonly "
-        "mail:user_mailbox.message:modify mail:user_mailbox.message.address:read "
-        "mail:user_mailbox.message.body:read mail:user_mailbox.message.subject:read "
-        "mail:event mail:user_mailbox.mail_contact:read mail:user_mailbox.mail_contact:write "
-        "task:task:read task:task:write task:tasklist:read task:tasklist:write task:comment:write "
-        "vc:meeting.meetingevent:read vc:meeting.search:read vc:note:read "
-        "board:whiteboard:node:create board:whiteboard:node:delete board:whiteboard:node:read "
-        "docs:event:subscribe docs:document.comment:delete"
-    )
+    oauth_scopes = load_user_scopes()
 
     config = {
         "app_id": app_id,
@@ -673,6 +668,98 @@ def print_finish():
     print()
 
 
+# ─── 已有应用流程 ────────────────────────────────────────────
+def existing_app_setup():
+    """已有飞书应用的配置流程：输入凭证 → 检查权限 → OAuth → 拉取数据"""
+    import requests
+
+    total_steps = 3
+
+    # 第 1 步：输入凭证
+    print_header("输入已有应用凭证", 1, total_steps)
+    print("  请在飞书开放平台找到你的应用：")
+    print("  https://open.feishu.cn/app")
+    print()
+    print("  进入应用 →「凭证与基础信息」，复制 App ID 和 App Secret。")
+    print()
+
+    app_id = ask("App ID（以 cli_ 开头）")
+    app_secret = ask("App Secret（应用密钥）")
+
+    print("\n  正在验证凭证...")
+    r = requests.post(
+        "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal",
+        json={"app_id": app_id, "app_secret": app_secret},
+    )
+    if r.json().get("code") != 0:
+        print(f"  ❌ 凭证验证失败: {r.json().get('msg')}")
+        sys.exit(1)
+    print("  ✅ 凭证验证通过！")
+
+    # 第 2 步：检查权限配置
+    print_header("检查应用权限", 2, total_steps)
+    print("  请确保你的应用已完成以下配置：")
+    print()
+    print("  ┌──────────────────────────────────────────────────┐")
+    print("  │ 1. 已添加「机器人」能力                          │")
+    print("  │ 2.「权限管理」中已导入 scopes.json 的权限        │")
+    print("  │ 3. 已创建版本并发布                              │")
+    print("  │ 4. 可用范围建议选「所有员工」                    │")
+    print("  └──────────────────────────────────────────────────┘")
+    print()
+
+    if not ask_yes_no("权限是否已按 scopes.json 配置好？"):
+        scopes_path = SCRIPTS_DIR / "scopes.json"
+        print()
+        print(f"  请打开 scopes.json 查看完整权限列表：")
+        print(f"  {scopes_path}")
+        print()
+        print("  在飞书开放平台 →「权限管理」→「批量导入/导出权限」中导入。")
+        print("  导入后需要「创建版本 → 申请发布」才能生效。")
+        print()
+        input("  完成后按回车继续...")
+
+    # 第 3 步：OAuth 授权
+    print_header("OAuth 授权", 3, total_steps)
+
+    oauth_scopes = load_user_scopes()
+
+    config = {
+        "app_id": app_id,
+        "app_secret": app_secret,
+        "default_chat_id": "",
+        "oauth_scopes": oauth_scopes,
+        "team_members": {},
+    }
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+    print("  ┌──────────────────────────────────────────────────┐")
+    print("  │ 先在飞书开放平台 → 安全设置 → 重定向 URL 添加： │")
+    print("  │ http://127.0.0.1:8080/callback                   │")
+    print("  └──────────────────────────────────────────────────┘")
+    print()
+
+    safe_open_url(f"https://open.feishu.cn/app/{app_id}/security")
+    token_data = None
+
+    if ask_yes_no("已添加重定向 URL，开始授权？"):
+        try:
+            token_data = do_oauth(app_id, app_secret, oauth_scopes)
+            with open(USER_TOKEN_PATH, "w", encoding="utf-8") as f:
+                json.dump(token_data, f, indent=2, ensure_ascii=False)
+            print("  ✅ 授权成功！")
+        except Exception as e:
+            print(f"\n  ⚠ 授权出错: {e}")
+            print("  稍后可运行 oauth_server.py 重试。")
+
+    # 拉取数据
+    print()
+    pull_team_data(config, token_data)
+
+
 # ─── 主流程 ──────────────────────────────────────────────────
 def main():
     check_python_version()
@@ -687,7 +774,20 @@ def main():
     print("  ╚══════════════════════════════════════════════╝")
     print()
 
-    # 检测 lark-cli
+    # 先问用户是否已有飞书应用
+    print("  请选择配置方式：")
+    print()
+    print("  1. 我已有飞书应用（已有 App ID 和 App Secret）")
+    print("  2. 我需要创建新应用")
+    print()
+    choice = ask("请输入 1 或 2", default="2")
+
+    if choice == "1":
+        existing_app_setup()
+        print_finish()
+        return
+
+    # 创建新应用的流程
     has_lark_cli = ensure_lark_cli()
 
     if has_lark_cli:
