@@ -12,7 +12,7 @@
 
 ```
 帮我安装全部 43-Agent-skills：
-git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
+git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills /tmp/43-Agent-skills/video-creator ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
 ```
 
 ### 只装某一个
@@ -22,7 +22,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
 ```
 
-把 `feishu-assistant` 换成你想装的技能名即可。可选：`feishu-assistant` · `social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills`
+把 `feishu-assistant` 换成你想装的技能名即可。可选：`feishu-assistant` · `social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `video-creator`
 
 > AI 会自动执行安装，首次使用时还会引导你完成配置。
 
@@ -39,6 +39,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 | [email-invoice-processor](./email-invoice-processor/) | 自动从 QQ/163/Gmail/Outlook 邮箱里按日期范围捞发票，识别金额、税号、开票日期等字段，按购买方分类生成 Excel 汇总表。报销季不用一封封翻邮件 | 开启邮箱 IMAP 即可 |
 | [chat-archiver](./chat-archiver/) | 和 AI 聊出了好东西？一句"入库"自动提炼精华、分类存进你的知识库。支持 Obsidian/Logseq 等主流工具，也支持自定义目录结构 | 零配置可用 |
 | [find-skills](./find-skills/) | 不知道有什么技能可以用？让 AI 从 skills.sh 生态里帮你搜，验证质量后一键安装，不用自己翻 GitHub | 需要 Node.js |
+| [video-creator](./video-creator/) | 告诉 AI 你想做什么视频，它帮你用代码生成——动画、字幕、3D、AI 配音、背景音乐、数据图表，说一句话就能出片 | 需要 Node.js + ffmpeg |
 
 ---
 
@@ -114,6 +115,16 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 > *「找一个能帮我写 changelog 的技能」*
 > *「我想给 PR review 找个自动化工具」*
 
+### 🎬 [video-creator](./video-creator/) — AI 帮你做视频
+
+告诉 AI 你想做什么视频，它帮你用代码生成。不用学 After Effects，不用剪辑软件，说一句话就能出片——动画、字幕、3D、AI 配音、背景音乐、数据图表全覆盖。
+
+> **配置**：需要 Node.js + ffmpeg，AI 配音需要 ElevenLabs API Key
+>
+> *「帮我做一个 30 秒的产品介绍视频，要有文字动画和背景音乐」*
+> *「把这段文案生成 AI 配音，配上字幕做成视频」*
+> *「做一个数据可视化动画，展示上季度的销售趋势」*
+
 ---
 
 ## 常见问题
@@ -131,6 +142,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 - **飞书助手**：需要飞书企业账号（飞书本身免费）
 - **Social Media Scout**：需要 TikHub API Key（注册有免费额度可测试）
 - **media-transcriber**：转录免费，说话人识别需注册 HuggingFace（免费）
+- **video-creator**：基础功能免费，AI 配音需要 ElevenLabs API Key（有免费额度）
 - **email-invoice-processor / chat-archiver / find-skills**：完全免费
 
 ## 许可证
