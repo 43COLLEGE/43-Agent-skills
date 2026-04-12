@@ -6,7 +6,7 @@ description:
 
 # web-browser Skill
 
-> 作者：43 COLLEGE 凯寓 (KAIYU) 出品
+> 原作者不详 · 凯寓 (KAIYU) 修改维护
 > 版本：v2.1.0
 
 ## 跨平台兼容

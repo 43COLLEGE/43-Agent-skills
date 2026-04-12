@@ -61,4 +61,4 @@ bash ~/.claude/skills/web-browser/scripts/check-deps.sh
 
 ## License
 
-[CC BY-NC-SA 4.0](../LICENSE) · 43 COLLEGE 凯寓 (KAIYU) 出品
+[CC BY-NC-SA 4.0](../LICENSE) · 原作者不详 · 凯寓 (KAIYU) 修改维护
