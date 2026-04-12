@@ -32,7 +32,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 
 | 技能 | 能帮你干什么 | 配置门槛 |
 |------|------------|----------|
-| [feishu-assistant](./feishu-assistant/) | 用自然语言操作飞书——发消息、写文档、查日历、建任务、管知识库、操作多维表格、收发邮箱，不用再在飞书里切来切去 | 需要飞书企业账号 |
+| [feishu-assistant](./feishu-assistant/) | 用自然语言操作飞书——发消息、写文档、查日历、建任务、管知识库、操作多维表格、收发邮箱，不用再在飞书里切来切去。**一个 skill 覆盖飞书官方 19 个 MCP skill 的能力，更轻量更优雅** | 需要飞书企业账号 |
 | [social-media-scout](./social-media-scout/) | 抖音、小红书、B站、TikTok、快手、微博、Instagram、YouTube、Twitter、微信公众号的数据一句话查到——粉丝画像、视频数据、评论分析、趋势追踪，做竞品分析和选题研究不用手动翻 | 注册 API Key 即可 |
 | [web-browser](./web-browser/) | 让 AI 操控真实 Chrome 浏览器——登录需要账号密码的后台抓数据、搞定小红书/微信公众号等反爬平台、截图取证、填表提交 | 需要 Node.js + Chrome |
 | [media-transcriber](./media-transcriber/) | 丢个音视频文件进来，出带时间戳的逐字稿，能分清谁说了什么（说话人识别），还能自动加标点断句。开完会、听完播客不用手动整理 | 安装 ffmpeg 即可 |
@@ -49,6 +49,8 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 ### 🔗 [feishu-assistant](./feishu-assistant/) — 飞书全家桶
 
 用自然语言操作飞书——发消息、写文档、查日历、建任务、管知识库、操作多维表格、收发邮箱，不用再在飞书里切来切去。
+
+飞书官方把这些能力拆成了 19 个独立的 MCP skill，这里只用 1 个 skill 全部搞定——更轻量、更优雅、上下文更连贯。
 
 > **配置**：需要飞书企业账号
 >
