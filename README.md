@@ -12,7 +12,7 @@
 
 ```
 帮我安装全部 43-Agent-skills：
-git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills /tmp/43-Agent-skills/video-creator /tmp/43-Agent-skills/follow-builders ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
+git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills /tmp/43-Agent-skills/video-creator /tmp/43-Agent-skills/follow-builders /tmp/43-Agent-skills/token-stats /tmp/43-Agent-skills/style-writer /tmp/43-Agent-skills/board ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
 ```
 
 ### 只装某一个
@@ -22,7 +22,7 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
 ```
 
-把 `feishu-assistant` 换成你想装的技能名即可。可选：`feishu-assistant` · `social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `video-creator` · `follow-builders`
+把 `feishu-assistant` 换成你想装的技能名即可。可选：`feishu-assistant` · `social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `video-creator` · `follow-builders` · `token-stats` · `style-writer` · `board`
 
 > AI 会自动执行安装，首次使用时还会引导你完成配置。
 
@@ -41,6 +41,9 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 | [find-skills](./find-skills/) | 不知道有什么技能可以用？让 AI 从 skills.sh 生态里帮你搜，验证质量后一键安装，不用自己翻 GitHub | 需要 Node.js |
 | [video-creator](./video-creator/) | 告诉 AI 你想做什么视频，它帮你用代码生成——动画、字幕、3D、AI 配音、背景音乐、数据图表，说一句话就能出片 | 需要 Node.js + ffmpeg |
 | [follow-builders](./follow-builders/) | 每天自动追踪 AI 领域顶尖构建者在 X 和播客上说了什么，混编成一份中文日报推送给你。支持自定义关注列表 | 零配置可用 |
+| [token-stats](./token-stats/) | Token 用量统计——扫描 Claude Code 会话数据，生成可视化仪表盘和日历热力图，看清每天用了多少 token、花了多少钱 | 零配置可用 |
+| [style-writer](./style-writer/) | 万能文风写作——从任意文本中抽取写作风格，在新主题上复现。预装 20+ 经典作家风格库，也支持自定义风格 | 零配置可用 |
+| [board](./board/) | 项目看板生成——口述或丢大纲进来，自动生成深浅双主题的 HTML 可视化看板，响应式适配手机 | 零配置可用 |
 
 ---
 
@@ -137,6 +140,36 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 > *「给我看看今天 AI 圈发生了什么」*
 > *「关注 Jim Fan」*
 > *「切换到每周推送，周一早上八点」*
+
+### 📊 [token-stats](./token-stats/) — Token 用量统计
+
+扫描 Claude Code 全部会话数据，生成可视化仪表盘和日历热力图。一眼看清每天用了多少 token、花了多少钱、哪天是高峰。
+
+> **配置**：零配置可用
+>
+> *「看看我这个月用了多少 token」*
+> *「token 日历」*
+> *「统计一下花了多少钱」*
+
+### ✍️ [style-writer](./style-writer/) — 万能文风写作
+
+从任意文本中抽取写作风格的「神」——节奏、语气、思维习惯，然后在新主题上复现。预装 20+ 经典作家风格（鲁迅、汪曾祺、村上春树等），也支持从你自己的文章中提取个人风格。
+
+> **配置**：零配置可用
+>
+> *「用汪曾祺的风格写一篇关于早餐的短文」*
+> *「抽取这篇文章的风格，用同样的风格写一篇新的」*
+> *「看看风格库有哪些可以用」*
+
+### 📋 [board](./board/) — 项目看板生成
+
+口述一段项目想法或丢一份大纲进来，自动梳理结构、生成深浅双主题的 HTML 可视化看板。支持已决项、依赖链、泳道对比、时间线、交付物等多种组件，响应式适配手机。
+
+> **配置**：零配置可用
+>
+> *「帮我把这个项目做成看板」*
+> *「创建一个产品 roadmap 看板」*
+> *「把刚才讨论的内容整理成看板」*
 
 ---
 

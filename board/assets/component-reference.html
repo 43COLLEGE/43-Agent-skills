@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Skill · 组件参考</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: 'MiSans'; src: local('MiSans'), local('MiSans Regular'), local('MiSans-Regular'); font-weight: 400; font-style: normal; }
+  @font-face { font-family: 'MiSans'; src: local('MiSans Medium'), local('MiSans-Medium'); font-weight: 500; font-style: normal; }
+  @font-face { font-family: 'MiSans'; src: local('MiSans Semibold'), local('MiSans-Semibold'); font-weight: 600; font-style: normal; }
+  @font-face { font-family: 'MiSans'; src: local('MiSans Bold'), local('MiSans-Bold'); font-weight: 700; font-style: normal; }
+  @font-face { font-family: 'MiSans'; src: local('MiSans Light'), local('MiSans-Light'); font-weight: 300; font-style: normal; }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e14;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.14);
+    --text-primary: #e8e6e1;
+    --text-secondary: #8a8680;
+    --text-tertiary: #4a4744;
+    --accent: #4ade80;
+    --accent-dim: rgba(74,222,128,0.15);
+    --accent-glow: rgba(74,222,128,0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --rose: #f43f5e;
+    --rose-dim: rgba(244,63,94,0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: 'MiSans', 'Outfit', 'PingFang SC', 'Noto Sans SC', system-ui, sans-serif;
+    --mono: 'MiSans', 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-tinted: 0 8px 32px -8px rgba(14,14,20,0.6);
+    --shadow-elevated: 0 20px 60px -12px rgba(14,14,20,0.8);
+  }
+
+  html[data-theme="light"] {
+    --bg: #f8f8f6;
+    --surface: rgba(255,255,255,0.85);
+    --surface-hover: rgba(0,0,0,0.03);
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.14);
+    --text-primary: #1c1917;
+    --text-secondary: #78716c;
+    --text-tertiary: #a8a29e;
+    --accent: #16a34a;
+    --accent-dim: rgba(22,163,74,0.10);
+    --accent-glow: rgba(22,163,74,0.05);
+    --amber: #d97706;
+    --amber-dim: rgba(217,119,6,0.10);
+    --rose: #e11d48;
+    --rose-dim: rgba(225,29,72,0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37,99,235,0.08);
+    --purple: #7c3aed;
+    --purple-dim: rgba(124,58,237,0.08);
+    --shadow-tinted: 0 8px 32px -8px rgba(0,0,0,0.06);
+    --shadow-elevated: 0 20px 60px -12px rgba(0,0,0,0.10);
+  }
+
+  html[data-theme="light"] .card { background: rgba(255,255,255,0.85); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  html[data-theme="light"] .card:hover { box-shadow: var(--shadow-tinted); }
+  html[data-theme="light"] .decided-item::before { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 8.5L7 11L11.5 5.5' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  html[data-theme="light"] .dep-node { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  html[data-theme="light"] .session-card { background: rgba(255,255,255,0.85); }
+  html[data-theme="light"] .footer { background: rgba(248,248,246,0.85); }
+
+  strong, b { font-weight: 600; font-size: 0.92em; letter-spacing: -0.01em; }
+  h1, h2 { font-weight: 700; -webkit-font-smoothing: antialiased; }
+
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all var(--transition);
+    flex-shrink: 0; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .theme-toggle:hover { border-color: var(--border-hover); color: var(--text-primary); }
+  .theme-toggle svg { width: 16px; height: 16px; }
+  .theme-toggle .icon-sun { display: none; }
+  html[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+  html[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+
+  html { font-size: 15px; -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text-primary); line-height: 1.6; min-height: 100dvh; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 48px 40px 120px; }
+
+  /* ── Header ── */
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 48px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .header-left h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1.2; }
+  .header-left p { margin-top: 6px; font-size: 0.88rem; color: var(--text-tertiary); max-width: 65ch; }
+  .header-meta { display: flex; align-items: center; gap: 12px; }
+  .meta-badge { padding: 6px 16px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; border: 1px solid; }
+  .meta-badge.amber { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,158,11,0.2); }
+
+  /* ── Section Titles ── */
+  .section { margin-bottom: 48px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .section-num { font-size: 0.8rem; font-weight: 700; font-family: var(--mono); flex-shrink: 0; padding: 2px 0; }
+  .section-title { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+  .section-sub { font-size: 0.82rem; color: var(--text-tertiary); margin-left: 8px; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; transition: all var(--transition); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-tinted); }
+
+  /* ── Decided Grid ── */
+  .decided-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .decided-item { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; font-weight: 400; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all var(--transition); }
+  .decided-item:hover { border-color: var(--border-hover); }
+  .decided-item::before { content: ''; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); margin-top: 1px; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 8.5L7 11L11.5 5.5' stroke='%230e0e14' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
+  .decided-detail { font-weight: 400; color: var(--text-tertiary); font-size: 0.78rem; margin-top: 2px; }
+
+  /* ── Dependency Chain ── */
+  .dep-chain { position: relative; padding: 20px 0; }
+  .dep-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; position: relative; }
+  .dep-node { padding: 14px 22px; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 500; border: 1px solid; min-width: 200px; text-align: center; transition: all var(--transition); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: relative; }
+  .dep-node.critical { background: var(--rose-dim); border-color: rgba(244,63,94,0.2); color: var(--rose); }
+  .dep-node.important { background: var(--amber-dim); border-color: rgba(245,158,11,0.2); color: var(--amber); }
+  .dep-node.normal { background: var(--blue-dim); border-color: rgba(96,165,250,0.2); color: var(--blue); }
+  .dep-node.output { background: var(--accent-dim); border-color: rgba(74,222,128,0.2); color: var(--accent); }
+  .dep-num { font-size: 0.72rem; font-weight: 700; margin-right: 4px; font-family: var(--mono); opacity: 0.7; }
+  .dep-arrow { color: var(--text-tertiary); font-size: 1.2rem; flex-shrink: 0; }
+  .dep-arrow-down { display: flex; justify-content: center; color: var(--text-tertiary); font-size: 1.2rem; margin: -4px 0; }
+  .dep-sub { font-size: 0.72rem; color: var(--text-tertiary); font-weight: 400; margin-top: 2px; display: block; }
+
+  /* ── Open Questions Table ── */
+  .q-table { width: 100%; border-collapse: collapse; }
+  .q-table th { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); font-family: var(--mono); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  .q-table td { padding: 14px 14px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.88rem; vertical-align: middle; }
+  html[data-theme="light"] .q-table td { border-bottom-color: rgba(0,0,0,0.04); }
+  .q-table tr:hover td { background: var(--surface-hover); }
+  .q-table tr:last-child td { border-bottom: none; }
+  .q-name { font-weight: 500; color: var(--text-primary); }
+  .q-status { display: inline-flex; padding: 3px 11px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; font-family: var(--mono); border: 1px solid transparent; }
+  .q-status.undecided { background: var(--rose-dim); color: var(--rose); border-color: rgba(244,63,94,0.15); }
+  .q-status.waiting { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,158,11,0.15); }
+  .q-status.progress { background: var(--blue-dim); color: var(--blue); border-color: rgba(96,165,250,0.15); }
+  .q-status.minor { background: var(--surface); color: var(--text-tertiary); border-color: var(--border); }
+  .q-urgency { font-size: 0.8rem; }
+  .q-urgency.must { color: var(--rose); font-weight: 600; }
+  .q-urgency.can-wait { color: var(--text-tertiary); }
+  .q-urgency.confirm { color: var(--amber); }
+
+  /* ── Schedule ── */
+  .schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .schedule-day { display: flex; flex-direction: column; gap: 16px; }
+  .day-header { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .day-badge { padding: 4px 12px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; font-family: var(--mono); letter-spacing: 0.05em; }
+  .day-badge.sat { background: var(--purple-dim); color: var(--purple); }
+  .day-badge.sun { background: var(--blue-dim); color: var(--blue); }
+
+  .session-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; transition: all var(--transition); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .session-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-tinted); }
+  .session-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .session-num { padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; font-family: var(--mono); flex-shrink: 0; }
+  .session-num.s1 { background: var(--rose-dim); color: var(--rose); }
+  .session-num.s2 { background: var(--amber-dim); color: var(--amber); }
+  .session-num.s3 { background: var(--purple-dim); color: var(--purple); }
+  .session-num.s4 { background: var(--blue-dim); color: var(--blue); }
+  .session-num.s5 { background: var(--amber-dim); color: var(--amber); }
+  .session-num.s6 { background: var(--accent-dim); color: var(--accent); }
+  .session-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+  .session-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+  .session-tasks { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .session-task { display: flex; align-items: flex-start; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+  .session-task::before { content: ''; flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--text-tertiary); margin-top: 7px; }
+  .session-output { margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--accent-glow); border-left: 2px solid rgba(74,222,128,0.3); font-size: 0.8rem; color: var(--accent); font-weight: 500; }
+
+  /* ── Swim Lanes ── */
+  .lane-grid { display: flex; flex-direction: column; gap: 14px; }
+  .lane-card { display: grid; grid-template-columns: 44px 1fr 1fr 1fr; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all var(--transition); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .lane-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-tinted); }
+  .lane-id { display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; font-family: var(--mono); writing-mode: vertical-lr; text-orientation: mixed; letter-spacing: 0.1em; }
+  .lane-main { padding: 22px 24px; border-right: 1px solid var(--border); }
+  .lane-name { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .lane-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+  .lane-cell { padding: 22px 24px; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
+  .lane-cell:last-child { border-right: none; }
+  .lane-cell-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--mono); color: var(--text-tertiary); margin-bottom: 6px; }
+  .lane-cell-value { font-size: 0.82rem; color: var(--text-primary); line-height: 1.5; font-weight: 400; }
+  .lane-cell-value.strong { color: var(--accent); font-weight: 600; }
+  .lane-cell-value.warn { color: var(--amber); font-weight: 600; }
+  .lane-cell-value.weak { color: var(--rose); font-weight: 500; }
+  .lane-cell-value.neutral { color: var(--text-secondary); }
+
+  .lane-thead { display: grid; grid-template-columns: 44px 1fr 1fr 1fr; gap: 0; padding: 0 0 8px; margin-bottom: 4px; }
+  .lane-th { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--mono); color: var(--text-tertiary); padding: 0 24px; }
+  .lane-th:first-child { padding: 0; text-align: center; }
+
+  @media (max-width: 960px) {
+    .lane-card { grid-template-columns: 1fr; }
+    .lane-id { writing-mode: horizontal-tb; padding: 12px 20px; justify-content: flex-start; }
+    .lane-cell { border-right: none; border-bottom: 1px solid var(--border); }
+    .lane-thead { display: none; }
+  }
+
+  /* ── Deliverables ── */
+  .deliverable-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .deliverable { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all var(--transition); }
+  .deliverable:hover { border-color: var(--border-hover); }
+  .deliverable-num { font-size: 0.7rem; font-weight: 700; font-family: var(--mono); color: var(--text-tertiary); margin-bottom: 6px; }
+  .deliverable-name { font-size: 0.88rem; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+  .deliverable-for { font-size: 0.75rem; color: var(--text-tertiary); }
+
+  /* ── Footer ── */
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 40px; background: rgba(14,14,20,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-tertiary); z-index: 10; }
+
+  /* ── Responsive ── */
+  @media (max-width: 960px) {
+    .page { padding: 28px 20px 120px; }
+    .decided-grid, .deliverable-grid { grid-template-columns: 1fr; }
+    .schedule-grid { grid-template-columns: 1fr; }
+    .dep-row { flex-direction: column; gap: 8px; }
+    .dep-arrow { transform: rotate(90deg); }
+    .header { flex-direction: column; gap: 12px; }
+  }
+
+  @media print { .footer, .theme-toggle { display: none; } body { background: #fff; } .card, .session-card, .decided-item, .deliverable { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══ Header ═══ -->
+  <header class="header">
+    <div class="header-left">
+      <h1>Board Skill · 组件参考</h1>
+      <p>此文件展示所有可用组件的视觉效果和 HTML 结构，内容均为占位示例</p>
+    </div>
+    <div class="header-meta">
+      <span class="meta-badge amber">示例周期标记</span>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换深浅色">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ 1. 已决项网格 (Decided Grid) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--accent)">01</span>
+      <span class="section-title">已决项网格</span>
+      <span class="section-sub">三列紧凑卡片，绿色勾选圆点</span>
+    </div>
+    <div class="decided-grid">
+      <div class="decided-item"><div>已确认的决策 A<div class="decided-detail">补充说明文字</div></div></div>
+      <div class="decided-item"><div>已确认的决策 B<div class="decided-detail">补充说明文字</div></div></div>
+      <div class="decided-item"><div>已确认的决策 C<div class="decided-detail">补充说明文字</div></div></div>
+      <div class="decided-item" style="border-color:rgba(74,222,128,0.25)"><div><strong>高亮已决项</strong><div class="decided-detail">使用 border-color 高亮边框</div></div></div>
+      <div class="decided-item"><div>已确认的决策 E<div class="decided-detail">补充说明文字</div></div></div>
+      <div class="decided-item"><div>已确认的决策 F<div class="decided-detail">补充说明文字</div></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ 2. 依赖链 (Dependency Chain) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--rose)">02</span>
+      <span class="section-title">依赖链</span>
+      <span class="section-sub">层级节点 + 箭头连接，按语义色分级</span>
+    </div>
+
+    <div class="dep-chain">
+      <div class="dep-row">
+        <div class="dep-node critical">
+          <span class="dep-num">1</span>关键前置条件
+          <span class="dep-sub">所有下游的上游</span>
+        </div>
+      </div>
+
+      <div class="dep-arrow-down">↓</div>
+
+      <div class="dep-row">
+        <div class="dep-node important">
+          <span class="dep-num">2</span>重要节点 A
+          <span class="dep-sub">amber 色标</span>
+        </div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-node normal">
+          <span class="dep-num">3</span>普通节点 B
+          <span class="dep-sub">blue 色标</span>
+        </div>
+      </div>
+
+      <div class="dep-arrow-down">↓</div>
+
+      <div class="dep-row">
+        <div class="dep-node output">
+          <span class="dep-num">4</span>最终产出
+          <span class="dep-sub">accent 色标</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 3. 泳道对比表 (Swim Lane) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--amber)">03</span>
+      <span class="section-title">泳道对比表</span>
+      <span class="section-sub">多维度对比卡片，左侧 ID 标签</span>
+    </div>
+
+    <div class="lane-thead">
+      <div class="lane-th">#</div>
+      <div class="lane-th">方案定义</div>
+      <div class="lane-th">优势</div>
+      <div class="lane-th">风险</div>
+    </div>
+
+    <div class="lane-grid">
+      <div class="lane-card">
+        <div class="lane-id" style="background:var(--rose-dim);color:var(--rose)">A</div>
+        <div class="lane-main">
+          <div class="lane-name">方案 Alpha</div>
+          <div class="lane-desc">方案简述，说明核心思路和适用场景</div>
+        </div>
+        <div class="lane-cell">
+          <div class="lane-cell-label">优势</div>
+          <div class="lane-cell-value strong">strong 语义色：强优势</div>
+        </div>
+        <div class="lane-cell">
+          <div class="lane-cell-label">风险</div>
+          <div class="lane-cell-value weak">weak 语义色：高风险</div>
+        </div>
+      </div>
+
+      <div class="lane-card">
+        <div class="lane-id" style="background:var(--amber-dim);color:var(--amber)">B</div>
+        <div class="lane-main">
+          <div class="lane-name">方案 Beta</div>
+          <div class="lane-desc">另一个方案的简述</div>
+        </div>
+        <div class="lane-cell">
+          <div class="lane-cell-label">优势</div>
+          <div class="lane-cell-value warn">warn 语义色：中等</div>
+        </div>
+        <div class="lane-cell">
+          <div class="lane-cell-label">风险</div>
+          <div class="lane-cell-value neutral">neutral 语义色：中性</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 4. 状态表格 (Open Questions Table) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--blue)">04</span>
+      <span class="section-title">状态表格</span>
+      <span class="section-sub">待决问题列表，带状态胶囊</span>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="q-table">
+        <thead>
+          <tr><th style="width:40%">问题</th><th style="width:20%">状态</th><th style="width:25%">紧急度</th><th>归属</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="q-name">未决问题示例 A</td>
+            <td><span class="q-status undecided">UNDECIDED</span></td>
+            <td class="q-urgency must">必须本周关闭</td>
+            <td style="color:var(--text-tertiary);font-size:0.82rem">负责人</td>
+          </tr>
+          <tr>
+            <td class="q-name">等待中问题示例 B</td>
+            <td><span class="q-status waiting">WAITING</span></td>
+            <td class="q-urgency confirm">需确认</td>
+            <td style="color:var(--text-tertiary);font-size:0.82rem">负责人</td>
+          </tr>
+          <tr>
+            <td class="q-name">进行中问题示例 C</td>
+            <td><span class="q-status progress">IN PROGRESS</span></td>
+            <td class="q-urgency can-wait">可等待</td>
+            <td style="color:var(--text-tertiary);font-size:0.82rem">负责人</td>
+          </tr>
+          <tr>
+            <td class="q-name">次要问题示例 D</td>
+            <td><span class="q-status minor">MINOR</span></td>
+            <td class="q-urgency can-wait">低优先级</td>
+            <td style="color:var(--text-tertiary);font-size:0.82rem">负责人</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ 5. 时间/阶段卡片 (Schedule) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--purple)">05</span>
+      <span class="section-title">时间/阶段卡片</span>
+      <span class="section-sub">按阶段分组，session 编号色彩循环</span>
+    </div>
+
+    <div class="schedule-grid">
+      <div class="schedule-day">
+        <div class="day-header">
+          <span class="day-badge sat">阶段 1</span>
+          第一阶段标题
+        </div>
+        <div class="session-card">
+          <div class="session-header">
+            <div class="session-num s1">S1</div>
+            <div class="session-title">任务模块 A</div>
+          </div>
+          <div class="session-desc">任务描述，说明要做什么、为什么</div>
+          <div class="session-tasks">
+            <div class="session-task" style="color:var(--accent)">✓ 已完成的任务</div>
+            <div class="session-task" style="color:var(--amber)">◐ 进行中的任务</div>
+            <div class="session-task">○ 未开始的任务</div>
+          </div>
+          <div class="session-output">产出物：交付文件名称</div>
+        </div>
+        <div class="session-card">
+          <div class="session-header">
+            <div class="session-num s2">S2</div>
+            <div class="session-title">任务模块 B</div>
+          </div>
+          <div class="session-desc">另一个任务模块</div>
+          <div class="session-tasks">
+            <div class="session-task">○ 待办事项</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="schedule-day">
+        <div class="day-header">
+          <span class="day-badge sun">阶段 2</span>
+          第二阶段标题
+        </div>
+        <div class="session-card">
+          <div class="session-header">
+            <div class="session-num s3">S3</div>
+            <div class="session-title">任务模块 C</div>
+          </div>
+          <div class="session-desc">第二阶段的任务</div>
+          <div class="session-tasks">
+            <div class="session-task">○ 待办事项</div>
+            <div class="session-task">○ 待办事项</div>
+          </div>
+          <div class="session-output">产出物：最终交付</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6. 交付物网格 (Deliverables) ═══ -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num" style="color:var(--accent)">06</span>
+      <span class="section-title">交付物网格</span>
+      <span class="section-sub">三列小卡片，编号 + 名称 + 来源</span>
+    </div>
+    <div class="deliverable-grid">
+      <div class="deliverable">
+        <div class="deliverable-num">D1</div>
+        <div class="deliverable-name">交付物名称</div>
+        <div class="deliverable-for">← 来源板块</div>
+      </div>
+      <div class="deliverable">
+        <div class="deliverable-num">D2</div>
+        <div class="deliverable-name">交付物名称</div>
+        <div class="deliverable-for">← 来源板块</div>
+      </div>
+      <div class="deliverable">
+        <div class="deliverable-num">D3</div>
+        <div class="deliverable-name">交付物名称</div>
+        <div class="deliverable-for">← 来源板块</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <span>Board Skill · 组件参考 · 占位示例</span>
+  <span>HER System</span>
+</footer>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    if (next === 'dark') html.removeAttribute('data-theme');
+    else html.setAttribute('data-theme', next);
+    localStorage.setItem('board-theme', next);
+  }
+  (function() {
+    const saved = localStorage.getItem('board-theme');
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  })();
+</script>
+
+</body>
+</html>
