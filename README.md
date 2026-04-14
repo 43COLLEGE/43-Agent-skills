@@ -2,7 +2,7 @@
 
 实用的 Claude Code 技能合集，让 AI 帮你完成更多事。
 
-> 43 COLLEGE 凯寓 (KAIYU) 出品
+> 43 COLLEGE · 凯寓 · 小七姐 出品
 
 ## 安装
 
@@ -198,4 +198,4 @@ git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills 
 
 ---
 
-问题反馈：[GitHub Issues](https://github.com/43COLLEGE/43-Agent-skills/issues) | 43 COLLEGE 凯寓 (KAIYU) 出品
+问题反馈：[GitHub Issues](https://github.com/43COLLEGE/43-Agent-skills/issues) | 43 COLLEGE · 凯寓 · 小七姐 出品
