@@ -6,25 +6,31 @@
 
 ## 安装
 
-打开 Claude Code，把下面的话发给 AI 就行。
+打开 Claude Code，复制下面的话发给 AI，它会自动完成安装。
 
 ### 全部安装
 
 ```
-帮我安装全部 43-Agent-skills：
-git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant /tmp/43-Agent-skills/social-media-scout /tmp/43-Agent-skills/web-browser /tmp/43-Agent-skills/media-transcriber /tmp/43-Agent-skills/email-invoice-processor /tmp/43-Agent-skills/chat-archiver /tmp/43-Agent-skills/find-skills /tmp/43-Agent-skills/video-creator /tmp/43-Agent-skills/follow-builders /tmp/43-Agent-skills/token-stats /tmp/43-Agent-skills/style-writer /tmp/43-Agent-skills/board ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
+帮我安装全部 43-Agent-skills：https://github.com/43COLLEGE/43-Agent-skills
 ```
 
 ### 只装某一个
 
 ```
-帮我安装 43-Agent-skills 的 feishu-assistant：
-git clone https://github.com/43COLLEGE/43-Agent-skills.git /tmp/43-Agent-skills && cp -r /tmp/43-Agent-skills/feishu-assistant ~/.claude/skills/ && rm -rf /tmp/43-Agent-skills
+帮我安装 feishu-assistant：https://github.com/43COLLEGE/43-Agent-skills
 ```
 
-把 `feishu-assistant` 换成你想装的技能名即可。可选：`feishu-assistant` · `social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `video-creator` · `follow-builders` · `token-stats` · `style-writer` · `board`
+```
+帮我安装 follow-builders：https://github.com/43COLLEGE/43-Agent-skills
+```
 
-> AI 会自动执行安装，首次使用时还会引导你完成配置。
+```
+帮我安装 video-creator：https://github.com/43COLLEGE/43-Agent-skills
+```
+
+其他可选：`social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `token-stats` · `style-writer` · `board`
+
+> 首次使用时 AI 会引导你完成配置，全程自然语言交互。
 
 ---
 
