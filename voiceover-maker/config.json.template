@@ -1,0 +1,110 @@
+{
+  "default_output_dir": "~/Desktop",
+  "default_provider": "auto",
+  "language_routing": {
+    "zh": "minimax",
+    "en": "elevenlabs"
+  },
+  "providers": {
+    "elevenlabs": {
+      "api_key": "",
+      "endpoint": "https://api.elevenlabs.io/v1/text-to-speech",
+      "default_voice": "rachel",
+      "default_model": "eleven_multilingual_v2",
+      "voices": {
+        "rachel": {
+          "voice_id": "21m00Tcm4TlvDq8ikWAM",
+          "desc": "英文女声，沉稳，适合科普旁白"
+        },
+        "adam": {
+          "voice_id": "pNInz6obpgDQGcFmaJgB",
+          "desc": "英文男声，深沉"
+        },
+        "bella": {
+          "voice_id": "EXAVITQu4vr4xnSDxMaL",
+          "desc": "英文女声，年轻活泼"
+        },
+        "antoni": {
+          "voice_id": "ErXwobaYiN019PkySvjV",
+          "desc": "英文男声，温和"
+        },
+        "domi": {
+          "voice_id": "AZnzlk1XvdvUeBnXmlld",
+          "desc": "英文女声，有力"
+        },
+        "josh": {
+          "voice_id": "TxGEqnHWrfWFTfGW9XjX",
+          "desc": "英文男声，年轻"
+        }
+      },
+      "voice_settings": {
+        "stability": 0.6,
+        "similarity_boost": 0.75,
+        "style": 0.2
+      }
+    },
+    "minimax": {
+      "api_key": "",
+      "fallback_keys": [],
+      "endpoint": "https://api.minimaxi.com/v1/t2a_v2",
+      "get_voice_endpoint": "https://api.minimaxi.com/v1/get_voice",
+      "default_voice": "lyrical",
+      "default_model": "speech-2.8-hd",
+      "voices": {
+        "lyrical": {
+          "voice_id": "Chinese (Mandarin)_Lyrical_Voice",
+          "desc": "抒情男声，青年磁性、流畅富表现力"
+        },
+        "gentleman": {
+          "voice_id": "Chinese (Mandarin)_Gentleman",
+          "desc": "温润男声，青年磁性、标准普通话"
+        },
+        "radio_host": {
+          "voice_id": "Chinese (Mandarin)_Radio_Host",
+          "desc": "电台男主播，青年富诗意、深夜电台质感"
+        },
+        "executive": {
+          "voice_id": "Chinese (Mandarin)_Reliable_Executive",
+          "desc": "沉稳高管，中年男性、可靠权威、商务深度内容"
+        },
+        "announcer": {
+          "voice_id": "Chinese (Mandarin)_Male_Announcer",
+          "desc": "播报男声，中年磁性、清晰权威、正式播报"
+        },
+        "sincere": {
+          "voice_id": "Chinese (Mandarin)_Sincere_Adult",
+          "desc": "真诚青年男声，鼓励性、亲和力强"
+        },
+        "news_anchor": {
+          "voice_id": "Chinese (Mandarin)_News_Anchor",
+          "desc": "新闻女声，中年专业播音腔、标准普通话"
+        },
+        "sweet_lady": {
+          "voice_id": "Chinese (Mandarin)_Sweet_Lady",
+          "desc": "甜美女声，青年温柔、标准普通话"
+        },
+        "warm_bestie": {
+          "voice_id": "Chinese (Mandarin)_Warm_Bestie",
+          "desc": "温暖闺蜜女声，青年清脆友好"
+        },
+        "wise_women": {
+          "voice_id": "Chinese (Mandarin)_Wise_Women",
+          "desc": "阅历姐姐女声，中年抒情、有阅历感"
+        }
+      },
+      "voice_settings": {
+        "speed": 1.0,
+        "vol": 1.0,
+        "pitch": 0,
+        "emotion": "neutral"
+      },
+      "audio_setting": {
+        "sample_rate": 32000,
+        "bitrate": 128000,
+        "format": "mp3",
+        "channel": 1
+      },
+      "_note": "api_key 是主 key（如果你用 MiniMax Token Plan，填 Token Plan key 更便宜）。fallback_keys 是兜底 key（如果你同时有按量付费 key，可填进来，主 key 鉴权失败/配额耗尽时自动切换）。只用一个 key 也可以，把 fallback_keys 留空数组就行。"
+    }
+  }
+}

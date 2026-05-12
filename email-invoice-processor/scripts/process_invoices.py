@@ -142,6 +142,8 @@ INVOICE_ATTACHMENT_KEYWORDS = [
 # 支持的文件类型
 PDF_TYPES = ["application/pdf", "application/x-pdf"]
 IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/tiff"]
+ZIP_TYPES = ["application/zip", "application/x-zip-compressed",
+             "application/octet-stream"]  # 部分发件方用 octet-stream 包装 ZIP
 
 # ==================== 邮件获取 ====================
 
@@ -419,7 +421,7 @@ def is_invoice_url(url):
             return True
 
     # 文件扩展名匹配
-    if re.search(r'\.(pdf|png|jpg|jpeg)(\?|$)', url_lower):
+    if re.search(r'\.(pdf|png|jpg|jpeg|zip)(\?|$)', url_lower):
         return True
     return False
 
@@ -478,11 +480,60 @@ def _is_valid_invoice_file(filepath):
     return True
 
 
-def _save_response_file(content, content_type, url, output_dir, prefix):
-    """保存下载的文件内容，返回文件路径或None"""
+def _extract_pdfs_from_zip(zip_bytes, output_dir, prefix, log_entries=None):
+    """从 ZIP 字节流中提取所有 PDF 发票，保存到 output_dir
+    返回保存成功的 PDF 文件路径列表
+    场景：12306 火车票邮件 ZIP 附件、字节系发票 HTML 正文里的 ZIP 直链下载
+    """
+    import zipfile
+    import io
+    saved = []
+    try:
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
+            pdf_names = [n for n in z.namelist() if n.lower().endswith(".pdf")]
+            if not pdf_names:
+                # 没 PDF 但有 OFD（电子发票国标格式）也算成功
+                ofd_names = [n for n in z.namelist() if n.lower().endswith(".ofd")]
+                if ofd_names:
+                    log(f"    ZIP 内仅含 OFD 格式（{len(ofd_names)} 个），未提取（pdfplumber 不支持 OFD）")
+                return []
+            for idx, name in enumerate(pdf_names, 1):
+                pdf_bytes = z.read(name)
+                if pdf_bytes[:4] != b'%PDF':
+                    continue
+                suffix = "" if len(pdf_names) == 1 else f"-{idx}"
+                # 用 ZIP 内原文件名（去扩展名）作为后缀，方便溯源
+                inner_stem = os.path.splitext(os.path.basename(name))[0]
+                out_name = f"{prefix}-{inner_stem}.pdf" if inner_stem else f"{prefix}{suffix}.pdf"
+                out_path = os.path.join(output_dir, out_name)
+                with open(out_path, "wb") as f:
+                    f.write(pdf_bytes)
+                if _is_valid_invoice_file(out_path):
+                    size_kb = len(pdf_bytes) / 1024
+                    log(f"    ZIP 提取: {out_name} ({size_kb:.1f}KB)")
+                    saved.append(out_path)
+                else:
+                    log(f"    跳过非发票 PDF: {out_name}")
+                    os.remove(out_path)
+    except zipfile.BadZipFile:
+        if log_entries is not None:
+            log_entries.append(f"[ZIP 损坏] prefix={prefix}")
+        return []
+    except Exception as e:
+        if log_entries is not None:
+            log_entries.append(f"[ZIP 处理异常] prefix={prefix} | {e}")
+        return []
+    return saved
+
+
+def _save_response_file(content, content_type, url, output_dir, prefix, log_entries=None):
+    """保存下载的文件内容，返回文件路径或None
+    支持：PDF / 图片 / ZIP（ZIP 自动解压取内部 PDF，返回第一个；多个 PDF 时调用方需用 _extract_pdfs_from_zip）
+    """
     # 先通过magic bytes判断真实类型，防止HTML页面被当文件保存
     is_pdf = False
     is_image = False
+    is_zip = False
 
     if content[:4] == b'%PDF':
         is_pdf = True
@@ -490,6 +541,8 @@ def _save_response_file(content, content_type, url, output_dir, prefix):
         is_image = True
     elif content[:3] == b'\xff\xd8\xff':
         is_image = True  # JPEG magic bytes
+    elif content[:4] == b'PK\x03\x04' or content[:4] == b'PK\x05\x06':
+        is_zip = True  # ZIP magic bytes（含字节系发票邮件正文 <a download> 直链场景）
     elif b'<html' in content[:1024].lower() or b'<!doctype' in content[:1024].lower():
         # 这是HTML页面，不是文件
         return None
@@ -499,8 +552,14 @@ def _save_response_file(content, content_type, url, output_dir, prefix):
         is_pdf = "pdf" in content_type or url.lower().endswith(".pdf")
         is_image = any(t in content_type for t in ["image/png", "image/jpeg", "image/jpg"])
 
-    if not (is_pdf or is_image):
+    if not (is_pdf or is_image or is_zip):
         return None
+
+    # ZIP 优先处理：解压取 PDF
+    if is_zip:
+        pdfs = _extract_pdfs_from_zip(content, output_dir, prefix, log_entries)
+        # 返回第一个 PDF 路径（调用方期望单文件）；多 PDF 场景已在 _extract_pdfs_from_zip 全部落盘
+        return pdfs[0] if pdfs else None
 
     ext = ".pdf" if is_pdf else ".png" if is_image and b'\x89PNG' in content[:8] else ".jpg"
     filename = f"{prefix}{ext}"
@@ -524,15 +583,52 @@ def _save_response_file(content, content_type, url, output_dir, prefix):
     return filepath
 
 
+def _extract_pdf_url_from_redirect(location_url):
+    """从 302 location URL 的 query string 中提取 pdfUrl/fileUrl 参数。
+    场景：云票 bwjf.cn 等 SPA 平台短链 302 后落在 SPA 页面，但 location 已经在 query
+    里暴露了真 PDF URL，可绕过 SPA 落地页直接下载。
+    """
+    from urllib.parse import urlparse, parse_qs, unquote
+    parsed = urlparse(location_url)
+    if not parsed.query:
+        return None
+    qs = parse_qs(parsed.query)
+    candidate_keys = ["pdfurl", "fileurl", "downloadurl",
+                      "pdf_url", "file_url", "download_url",
+                      "invoiceurl", "invoice_url"]
+    for k, vs in qs.items():
+        if k.lower() in candidate_keys and vs:
+            val = vs[0]
+            if val.startswith("http"):
+                return unquote(val)
+    return None
+
+
 def try_download_url(url, output_dir, prefix, log_entries):
     """尝试通过HTTP下载，失败则用Playwright浏览器回退"""
     # 第一步：HTTP直接下载
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/120.0.0.0 Safari/537.36",
+    }
+
+    # 启发式：检查首跳 302 location 是否在 query string 里直接带了真 PDF URL
+    # （场景：云票 bwjf.cn 等 SPA 平台，落地页是 SPA 页面但 location 已暴露 pdfUrl）
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/120.0.0.0 Safari/537.36",
-        }
+        head_resp = requests.get(url, headers=headers, timeout=15,
+                                 allow_redirects=False, stream=False)
+        if 300 <= head_resp.status_code < 400:
+            location = head_resp.headers.get("Location", "")
+            if location:
+                extracted = _extract_pdf_url_from_redirect(location)
+                if extracted:
+                    log(f"    302 location 直接带 PDF URL，绕过 SPA 落地页")
+                    url = extracted
+    except Exception:
+        pass  # 启发式失败不影响主流程
+
+    try:
         resp = requests.get(url, headers=headers, timeout=30,
                             allow_redirects=True, stream=False)
         resp.raise_for_status()
@@ -542,7 +638,7 @@ def try_download_url(url, output_dir, prefix, log_entries):
         # 如果是直接文件，保存
         if "html" not in content_type:
             result = _save_response_file(resp.content, content_type, resp.url,
-                                         output_dir, prefix)
+                                         output_dir, prefix, log_entries)
             if result:
                 return result
 
@@ -671,18 +767,33 @@ def download_attachments(invoice_email, output_dir, index, log_entries):
             filename = decode_mime_header(filename)
         content_type = part.get_content_type()
 
-        # 判断是否为PDF或图片
+        # 判断是否为PDF / 图片 / ZIP
         is_pdf = (content_type in PDF_TYPES or
                   (filename and filename.lower().endswith(".pdf")))
         is_image = (content_type in IMAGE_TYPES or
                     (filename and filename.lower().endswith((".png", ".jpg", ".jpeg"))))
+        is_zip = (content_type in ZIP_TYPES or
+                  (filename and filename.lower().endswith(".zip")))
 
-        if not (is_pdf or is_image):
+        if not (is_pdf or is_image or is_zip):
             continue
 
         # 如果有多个附件，优先PDF
         payload = part.get_payload(decode=True)
         if payload is None:
+            continue
+
+        # ZIP 附件：用 magic bytes 二次验证后解压取 PDF（场景：12306 火车票邮件）
+        if is_zip:
+            if payload[:4] not in (b'PK\x03\x04', b'PK\x05\x06'):
+                # 不是真 ZIP（可能是 octet-stream 但内容是别的）
+                continue
+            safe_subject = re.sub(r'[\\/:*?"<>|]', '', subject)[:30]
+            attachment_idx += 1
+            zip_prefix = f"{index:03d}-{safe_subject}" if attachment_idx == 1 \
+                         else f"{index:03d}-{safe_subject}-{attachment_idx}"
+            pdfs = _extract_pdfs_from_zip(payload, output_dir, zip_prefix, log_entries)
+            downloaded.extend(pdfs)
             continue
 
         attachment_idx += 1
@@ -962,23 +1073,33 @@ def parse_invoice_text(text, filepath):
                             fields["销售方"] = companies[1]
                 break
 
-    # 价税合计（大写金额前面通常有小写金额）
-    m = re.search(r'价税合计[（(小写)）]*[：:\s]*[¥￥]?\s*([\d,]+\.?\d*)', text)
+    # 价税合计（大写金额前面通常有小写金额；支持红冲发票负数）
+    m = re.search(r'价税合计[（(小写)）]*[：:\s]*[¥￥]?\s*(-?[\d,]+\.?\d*)', text)
     if m:
         fields["价税合计"] = m.group(1).replace(",", "")
     else:
         # 也尝试匹配"小写"后面的金额
-        m = re.search(r'小写[）)]*[：:\s]*[¥￥]?\s*([\d,]+\.\d{2})', text)
+        m = re.search(r'小写[）)]*[：:\s]*[¥￥]?\s*(-?[\d,]+\.\d{2})', text)
         if m:
             fields["价税合计"] = m.group(1).replace(",", "")
+        else:
+            # 12306 电子客票格式：直接 ￥xx.xx 或 ￥-xx.xx，没有"价税合计"标签
+            # 取整页最大绝对值的金额作为票面价
+            amounts = re.findall(r'[¥￥]\s*(-?\d+\.\d{2})', text)
+            if amounts:
+                try:
+                    pick = max(amounts, key=lambda a: abs(float(a)))
+                    fields["价税合计"] = pick
+                except ValueError:
+                    pass
 
-    # 金额（不含税）
-    m = re.search(r'合\s*计[：:\s]*[¥￥]?\s*([\d,]+\.?\d*)', text)
+    # 金额（不含税；支持负数）
+    m = re.search(r'合\s*计[：:\s]*[¥￥]?\s*(-?[\d,]+\.?\d*)', text)
     if m:
         fields["金额"] = m.group(1).replace(",", "")
 
-    # 税额
-    m = re.search(r'税\s*额[：:\s]*[¥￥]?\s*([\d,]+\.?\d*)', text)
+    # 税额（支持负数）
+    m = re.search(r'税\s*额[：:\s]*[¥￥]?\s*(-?[\d,]+\.?\d*)', text)
     if m:
         fields["税额"] = m.group(1).replace(",", "")
 
@@ -991,6 +1112,97 @@ def parse_invoice_text(text, filepath):
         except ValueError:
             pass
 
+    # 红冲（退票/作废）发票识别：标注备注，方便人工核对抵消项
+    if "红冲" in text or "原发票号码" in text:
+        m_orig = re.search(r'原发票号码[：:\s]*(\d{8,20})', text)
+        note = "退票红冲"
+        if m_orig:
+            note += f"，原发票号 {m_orig.group(1)}"
+        fields["备注"] = note
+
+    return fields
+
+
+def parse_invoice_from_email_body(html_body, text_body):
+    """从邮件正文文本提取发票字段——附件抓取失败时的兜底数据源。
+
+    云票/诺诺/百望/航信/旺企云 等平台的发票邮件正文里都白纸黑字写着购方/金额/发票号——
+    哪怕附件链接死了、二维码识别失败、平台 SPA 落地页抓不到 PDF，这些字段也仍然在邮件里。
+    永远先扫一遍正文，把字段提出来作为兜底。
+
+    返回 dict（含任意非空字段）或 None。
+    """
+    # 把 HTML 转为纯文本
+    text = html_body or ""
+    text = re.sub(r'<style[^>]*>.*?</style>', ' ', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<script[^>]*>.*?</script>', ' ', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    # HTML 实体反转义
+    try:
+        from html import unescape
+        text = unescape(text)
+    except Exception:
+        pass
+    text = re.sub(r'\s+', ' ', text)
+    text = (text + " " + (text_body or "")).strip()
+    if not text:
+        return None
+
+    fields = {}
+
+    # 发票号码（数电 20 位 / 老版 8-12 位）
+    m = re.search(r'发票号码[：:\s]*(\d{8,20})', text)
+    if m:
+        fields["发票号码"] = m.group(1)
+
+    # 开票日期（多格式）
+    m = re.search(r'(?:开票日期|开票时间)[：:\s]*'
+                  r'(\d{4}[年\-./]\s*\d{1,2}[月\-./]\s*\d{1,2}日?)', text)
+    if m:
+        fields["开票日期"] = re.sub(r'\s+', '', m.group(1))
+
+    # 购买方（购方名称 / 购买方名称 / 购方）
+    for pat in [r'购方名称[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})',
+                r'购买方名称[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})',
+                r'购买方[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})']:
+        m = re.search(pat, text)
+        if m:
+            buyer = m.group(1).strip()
+            # 截断到第一个明显结束字符
+            buyer = re.split(r'[，,。.;；]| 开票| 销| 发票| 金额', buyer)[0].strip()
+            if len(buyer) >= 4:
+                fields["购买方"] = buyer
+                break
+
+    # 销售方（销方名称 / 销售方名称 / 开票方 / 商家）
+    for pat in [r'销方名称[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})',
+                r'销售方名称[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})',
+                r'(?:销售方|开票方)[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})',
+                r'销方[：:\s]*([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40})']:
+        m = re.search(pat, text)
+        if m:
+            seller = re.split(r'[，,。.;；]| 开票| 购| 发票| 金额', m.group(1).strip())[0].strip()
+            if len(seller) >= 4:
+                fields["销售方"] = seller
+                break
+
+    # 兜底：邮件主题或正文里常见的「销方：XXX」「来自XXX」格式
+    if "销售方" not in fields:
+        m = re.search(r'(?:销方[：:]|来自[【\[]?)([\u4e00-\u9fa5（）()A-Za-z0-9·\-]{4,40}(?:有限公司|分公司|餐厅|酒店|集团|事务所))', text)
+        if m:
+            fields["销售方"] = m.group(1).strip()
+
+    # 价税合计 / 开票金额 / 发票金额（取一个）
+    for pat in [r'(?:价税合计|开票金额|发票金额)[：:\s]*[¥￥]?\s*(-?[\d,]+\.\d{2})\s*元?',
+                r'金额[：:\s]*[¥￥]?\s*(-?[\d,]+\.\d{2})\s*元?',
+                r'【发票金额[：:]\s*([\d,]+\.\d{2})']:
+        m = re.search(pat, text)
+        if m:
+            fields["价税合计"] = m.group(1).replace(",", "")
+            break
+
+    if not fields:
+        return None
     return fields
 
 
@@ -1036,8 +1248,8 @@ def extract_invoice_fields(filepath, output_dir=None, log_entries=None):
 # ==================== Excel 生成 ====================
 
 
-def generate_excel(all_invoice_data, output_dir):
-    """按购买方分sheet生成Excel"""
+def generate_excel(all_invoice_data, output_dir, attention_items=None, log_entries=None):
+    """按购买方分sheet生成Excel。若提供 attention_items / log_entries，在最前面插入「⚠️ 待人工核对」sheet"""
     wb = openpyxl.Workbook()
     # 删除默认sheet
     wb.remove(wb.active)
@@ -1121,6 +1333,72 @@ def generate_excel(all_invoice_data, output_dir):
                     cell = ws.cell(row=total_row, column=col_idx, value=round(total, 2))
                     cell.font = Font(bold=True)
                     cell.border = thin_border
+
+    # 待人工核对 sheet（如果有降级项 / 日志事项，放最前面，醒目）
+    has_attention = bool(attention_items) or bool(
+        [e for e in (log_entries or []) if any(k in e for k in
+         ["[需手动下载]", "[无附件无链接]", "[浏览器未找到下载]",
+          "[解析失败]", "[ZIP", "[需浏览器]"])]
+    )
+    if has_attention:
+        ws_a = wb.create_sheet(title="⚠️ 待人工核对", index=0)
+        att_fill = PatternFill(start_color="FFE699", end_color="FFE699", fill_type="solid")
+        att_header_fill = PatternFill(start_color="F4B084", end_color="F4B084", fill_type="solid")
+
+        att_headers = ["类型", "邮件主题 / 文件", "发件人 / URL", "字段提取情况", "建议处置"]
+        for col, h in enumerate(att_headers, 1):
+            c = ws_a.cell(row=1, column=col, value=h)
+            c.font = Font(bold=True, size=11)
+            c.fill = att_header_fill
+            c.border = thin_border
+            c.alignment = Alignment(horizontal="center")
+
+        row = 2
+        for item in attention_items or []:
+            ws_a.cell(row=row, column=1, value=item.get("类型", ""))
+            ws_a.cell(row=row, column=2, value=item.get("邮件", ""))
+            ws_a.cell(row=row, column=3, value=item.get("发件人", ""))
+            ws_a.cell(row=row, column=4, value=item.get("字段", ""))
+            ws_a.cell(row=row, column=5, value=item.get("处置", ""))
+            for col in range(1, 6):
+                cell = ws_a.cell(row=row, column=col)
+                cell.border = thin_border
+                cell.fill = att_fill
+                cell.alignment = Alignment(vertical="center", wrap_text=True)
+            row += 1
+
+        # 把下载/解析失败的 log_entries 也归进来（去重）
+        seen = set()
+        for entry in (log_entries or []):
+            if not any(k in entry for k in
+                       ["[需手动下载]", "[无附件无链接]", "[浏览器未找到下载]",
+                        "[解析失败]", "[ZIP", "[需浏览器]"]):
+                continue
+            if entry in seen:
+                continue
+            seen.add(entry)
+            if "[需手动下载]" in entry: typ = "需手动下载"
+            elif "[无附件无链接]" in entry: typ = "无附件无链接"
+            elif "[浏览器未找到下载]" in entry: typ = "浏览器未抓到"
+            elif "[解析失败]" in entry: typ = "PDF 解析失败"
+            elif "[ZIP" in entry: typ = "ZIP 异常"
+            elif "[需浏览器]" in entry: typ = "需浏览器"
+            else: typ = "其他"
+            ws_a.cell(row=row, column=1, value=typ)
+            ws_a.cell(row=row, column=2, value=entry[:300])
+            ws_a.cell(row=row, column=5, value="参考处理日志.txt 详情")
+            for col in range(1, 6):
+                cell = ws_a.cell(row=row, column=col)
+                cell.border = thin_border
+                cell.fill = att_fill
+                cell.alignment = Alignment(vertical="center", wrap_text=True)
+            row += 1
+
+        widths_a = [16, 60, 30, 28, 32]
+        for col, w in enumerate(widths_a, 1):
+            ws_a.column_dimensions[openpyxl.utils.get_column_letter(col)].width = w
+        ws_a.row_dimensions[1].height = 28
+        ws_a.freeze_panes = "A2"
 
     # 保存
     excel_path = os.path.join(output_dir, "发票汇总.xlsx")
@@ -1215,35 +1493,113 @@ def main():
         log("没有找到发票邮件")
         return
 
-    # 步骤4: 下载附件
-    log("\n=== 步骤4: 下载发票附件 ===")
-    all_files = []
+    # 步骤4: 下载附件 + 同时解析邮件正文兜底字段
+    log("\n=== 步骤4: 下载发票附件（+ 邮件正文兜底层） ===")
+    # 每条记录 = (filepath_or_None, inv_email, body_fields)
+    all_records = []
+    attention_items = []
     for i, inv_email in enumerate(invoice_emails, 1):
         log(f"\n  [{i}/{len(invoice_emails)}] {inv_email['subject']}")
+        # 永远先扫一遍邮件正文（成本极低）：哪怕附件抓不到，正文里"购方/金额/发票号"也已经写明
+        body_fields = parse_invoice_from_email_body(
+            inv_email.get("html_body", ""),
+            inv_email.get("text_body", ""),
+        )
+        if body_fields:
+            log(f"    📋 正文兜底字段: {list(body_fields.keys())}")
         files = download_attachments(inv_email, output_dir, i, log_entries)
-        all_files.extend(files)
+        if files:
+            for f in files:
+                all_records.append((f, inv_email, body_fields))
+        elif body_fields:
+            # 附件抓取失败但正文有字段 — 仍可入库，标进待人工核对
+            log(f"    📋 附件未抓到，使用正文兜底字段入库（待人工核对）")
+            all_records.append((None, inv_email, body_fields))
+            attention_items.append({
+                "类型": "附件未抓到",
+                "邮件": inv_email["subject"],
+                "发件人": inv_email["from"],
+                "字段": "来自邮件正文兜底",
+                "处置": "请核对金额/发票号，按需手动下载 PDF 留存",
+            })
+        # 既没附件也没正文字段 — download_attachments 已在 log_entries 里记录
 
-    log(f"\n共下载 {len(all_files)} 个文件")
+    file_count = sum(1 for r in all_records if r[0])
+    log(f"\n共下载 {file_count} 个文件，{len(all_records) - file_count} 条仅靠正文兜底")
 
-    # 步骤5: 提取发票字段
-    log("\n=== 步骤5: 提取发票字段 ===")
+    # 步骤5: 提取字段 + 合并正文兜底
+    log("\n=== 步骤5: 提取发票字段（PDF 主，正文补全） ===")
     all_invoice_data = []
-    for filepath in all_files:
-        log(f"  解析: {os.path.basename(filepath)}")
-        fields = extract_invoice_fields(filepath, output_dir, log_entries)
-        if fields:
-            all_invoice_data.append(fields)
-            buyer = fields.get("购买方", "未识别")
-            seller = fields.get("销售方", "未识别")
-            total = fields.get("价税合计", "未识别")
-            log(f"    购买方: {buyer} | 销售方: {seller} | 价税合计: {total}")
+    for filepath, inv_email, body_fields in all_records:
+        body_fields = body_fields or {}
+
+        if filepath:
+            log(f"  解析: {os.path.basename(filepath)}")
+            fields = extract_invoice_fields(filepath, output_dir, log_entries)
         else:
-            log_entries.append(f"[解析失败] 文件: {os.path.basename(filepath)}")
+            log(f"  无文件，仅用正文兜底: {inv_email['subject'][:40]}")
+            fields = None
+
+        # 组装最终记录
+        if fields:
+            # PDF 提取成功，用正文字段补全 PDF 没提到的项（如购方/销方）
+            patched = []
+            for k, v in body_fields.items():
+                cur = fields.get(k)
+                if (cur is None or cur == "") and v:
+                    fields[k] = v
+                    patched.append(f"{k}←正文")
+            if patched:
+                existing_note = fields.get("_note", "") or ""
+                fields["_note"] = (existing_note + " | " + " ".join(patched)).strip(" |")
+            all_invoice_data.append(fields)
+            buyer = fields.get("购买方", "") or "未识别"
+            seller = fields.get("销售方", "") or "未识别"
+            total = fields.get("价税合计", "") or "未识别"
+            log(f"    购买方: {buyer} | 销售方: {seller} | 价税合计: {total}")
+        elif body_fields:
+            # PDF 解析失败但有正文字段 — 入库 + 标 attention
+            fname = os.path.basename(filepath) if filepath else f"(无附件) {inv_email['subject'][:40]}"
+            rec = {
+                "文件": fname,
+                "发票号码": body_fields.get("发票号码", ""),
+                "发票代码": "",
+                "开票日期": body_fields.get("开票日期", ""),
+                "销售方": body_fields.get("销售方", ""),
+                "购买方": body_fields.get("购买方", ""),
+                "金额": "",
+                "税额": "",
+                "价税合计": body_fields.get("价税合计", ""),
+                "_note": "字段来自邮件正文兜底，PDF/附件未提取成功",
+            }
+            all_invoice_data.append(rec)
+            log(f"    📋 正文兜底入库: 购买方={rec['购买方']} 价税合计={rec['价税合计']}")
+            attention_items.append({
+                "类型": "PDF 解析失败",
+                "邮件": inv_email["subject"],
+                "发件人": inv_email["from"],
+                "字段": "来自邮件正文兜底",
+                "处置": "请核对金额是否正确",
+            })
+        else:
+            log_entries.append(f"[解析失败] 文件: {os.path.basename(filepath) if filepath else inv_email['subject']}")
+
+    # 标记 "购买方未识别" 进入待人工核对
+    for rec in all_invoice_data:
+        buyer = (rec.get("购买方") or "").strip()
+        if not buyer or "未识别" in buyer:
+            attention_items.append({
+                "类型": "购买方未识别",
+                "邮件": rec.get("文件", ""),
+                "发件人": "",
+                "字段": f"销售方={rec.get('销售方','')} 价税合计={rec.get('价税合计','')}",
+                "处置": "请人工核对购买方公司归属",
+            })
 
     # 步骤6: 生成Excel
     log("\n=== 步骤6: 生成Excel ===")
     if all_invoice_data:
-        generate_excel(all_invoice_data, output_dir)
+        generate_excel(all_invoice_data, output_dir, attention_items, log_entries)
     else:
         log("没有成功解析的发票数据，跳过Excel生成")
 
@@ -1255,7 +1611,7 @@ def main():
         f.write(f"日期范围: {start_date.strftime('%Y-%m-%d')} ~ {end_date.strftime('%Y-%m-%d')}\n")
         f.write(f"IMAP命中: {len(msg_ids)} 封\n")
         f.write(f"发票邮件: {len(invoice_emails)} 封\n")
-        f.write(f"下载文件: {len(all_files)} 个\n")
+        f.write(f"下载文件: {file_count} 个\n")
         f.write(f"解析成功: {len(all_invoice_data)} 个\n")
         f.write(f"\n{'='*60}\n\n")
 
@@ -1272,7 +1628,7 @@ def main():
     log(f"\n{'='*60}")
     log(f"处理完成!")
     log(f"  发票邮件: {len(invoice_emails)} 封")
-    log(f"  下载文件: {len(all_files)} 个")
+    log(f"  下载文件: {file_count} 个")
     log(f"  解析成功: {len(all_invoice_data)} 个")
     if log_entries:
         log(f"  需关注: {len(log_entries)} 项（见处理日志.txt）")

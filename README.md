@@ -28,7 +28,7 @@
 帮我安装 video-creator：https://github.com/43COLLEGE/43-Agent-skills
 ```
 
-其他可选：`social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `token-stats` · `style-writer` · `board`
+其他可选：`social-media-scout` · `web-browser` · `media-transcriber` · `email-invoice-processor` · `chat-archiver` · `find-skills` · `token-stats` · `style-writer` · `board` · `vps-starter` · `voiceover-maker`
 
 > 首次使用时 AI 会引导你完成配置，全程自然语言交互。
 
@@ -50,6 +50,8 @@
 | [token-stats](./token-stats/) | Token 用量统计——扫描 Claude Code 会话数据，生成可视化仪表盘和日历热力图，看清每天用了多少 token、花了多少钱 | 零配置可用 |
 | [style-writer](./style-writer/) | 万能文风写作——从任意文本中抽取写作风格，在新主题上复现。预装 20+ 经典作家风格库，也支持自定义风格 | 零配置可用 |
 | [board](./board/) | 项目看板生成——口述或丢大纲进来，自动生成深浅双主题的 HTML 可视化看板，响应式适配手机 | 零配置可用 |
+| [vps-starter](./vps-starter/) | VPS 小白起步陪跑——从"收到 VPS 账号邮件"带到"有一台干净、安全、随时可用的 Linux 服务器"。SSH 登录、系统加固、防火墙、日常运维全流程，跨平台（Mac/Windows） | 零配置可用 |
+| [voiceover-maker](./voiceover-maker/) | 把任意文本变成 MP3 配音/旁白文件——多 provider 自动路由（中文 MiniMax，英文 ElevenLabs），长稿自动分段、dry-run 估价、情绪/语速调节、本地缓存与用量统计 | 注册 ElevenLabs / MiniMax API Key |
 
 ---
 
@@ -177,6 +179,27 @@
 > *「创建一个产品 roadmap 看板」*
 > *「把刚才讨论的内容整理成看板」*
 
+### 🎤 [voiceover-maker](./voiceover-maker/) — 文本配音生成器
+
+把任意文本变成 MP3 配音/旁白文件。中文走 MiniMax（音色多、发音地道、可调情绪语速），英文走 ElevenLabs，自动按语种路由。支持长稿分段、dry-run 估价、5 秒试听、本地缓存复用、双 key fallback。零依赖纯 Python。
+
+> **配置**：注册 ElevenLabs / MiniMax API Key（只配一个也能用）
+>
+> *「把这段文字录成音频：今天天气不错，适合出门散步」*
+> *「用 lyrical 这个音色把桌面上的旁白稿.txt 录成 MP3」*
+> *「做一段视频旁白，要沉稳的播报员声音，速度稍慢一点」*
+> *「把这篇文章录成音频，先估一下要花多少钱」*
+
+### 🖥️ [vps-starter](./vps-starter/) — VPS 小白起步陪跑
+
+买了 VPS 不会用？这个 skill 把你从"收到 VPS 账号邮件"带到"有一台干净、安全、随时可用的 Linux 服务器"。SSH 登录、系统加固、防火墙、日常运维全流程，只打地基，不涉及应用层（建站/VPN/代理都是后续 skill 的事）。跨平台（Mac/Windows）。
+
+> **配置**：零配置可用
+>
+> *「我买了个 VPS 不会用」*
+> *「第一次用服务器，怎么 SSH 登录」*
+> *「帮我把这台服务器做个安全初始化」*
+
 ---
 
 ## 常见问题
@@ -196,6 +219,7 @@
 - **media-transcriber**：转录免费，说话人识别需注册 HuggingFace（免费）
 - **video-creator**：基础功能免费，AI 配音需要 ElevenLabs API Key（有免费额度）
 - **follow-builders**：完全免费，Telegram/邮件推送需对应 API Key（免费额度足够）
+- **voiceover-maker**：技能本身免费，调用 ElevenLabs / MiniMax 按字符付费（两家都有免费额度可测试）
 - **email-invoice-processor / chat-archiver / find-skills**：完全免费
 
 ## 许可证

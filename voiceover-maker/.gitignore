@@ -1,0 +1,10 @@
+# 含 API key 的实际配置（保留 config.json.template）
+config.json
+
+# 运行时生成的本地缓存与用量日志
+cache/
+usage.jsonl
+
+# Python
+__pycache__/
+*.pyc
